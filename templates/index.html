@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera System</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        /* Main container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            width: 100%;
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Video container */
+        .video-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .video-container h2 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        /* Image lists container */
+        .image-lists {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .image-list {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-list h2 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Image grid */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-grid img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Status indicators */
+        .status-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .status-indicator {
+            padding: 10px 20px;
+            border-radius: 5px;
+            background: #2d3748;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .status-dot.inactive {
+            background: #f56565;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .image-lists {
+                flex-direction: column;
+            }
+
+            .image-list {
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .video-container {
+                padding: 10px;
+            }
+
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+
+        /* Animation for new images */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-grid img {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Camera Control System</h1>
+            <p>IR Sensor & Joystick Controlled Image Capture</p>
+        </header>
+
+        <div class="status-container">
+            <div class="status-indicator">
+                <div class="status-dot" id="ir-status"></div>
+                <span>IR Sensor</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="relay-status"></div>
+                <span>Relay</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="servo-status"></div>
+                <span>Servo</span>
+            </div>
+        </div>
+
+        <div class="video-container">
+            <h2>Live Camera Feed</h2>
+            <div class="video-feed">
+                <img src="{{ url_for('video_feed') }}" width="100%" height="auto">
+            </div>
+        </div>
+        
+        <div class="image-lists">
+            <div class="image-list">
+                <h2>Accepted Images</h2>
+                <div class="image-grid">
+                    {% for image in accepted_images %}
+                    <img src="{{ url_for('static', filename='accepted/' + image) }}" alt="Accepted image">
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="image-list">
+                <h2>Rejected Images</h2>
+                <div class="image-grid">
+                    {% for image in rejected_images %}
+                    <img src="{{ url_for('static', filename='rejected/' + image) }}" alt="Rejected image">
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let irActive = false;
+        let relayActive = false;
+        let servoActive = false;
+
+        function updateStatusDots() {
+            document.getElementById('ir-status').className = 
+                'status-dot' + (irActive ? '' : ' inactive');
+            document.getElementById('relay-status').className = 
+                'status-dot' + (relayActive ? '' : ' inactive');
+            document.getElementById('servo-status').className = 
+                'status-dot' + (servoActive ? '' : ' inactive');
+        }
+
+        function checkIR() {
+            fetch('/check_ir')
+                .then(response => response.json())
+                .then(data => {
+                    irActive = data.triggered;
+                    if (data.triggered) {
+                        relayActive = true;
+                        setTimeout(() => {
+                            relayActive = false;
+                            updateStatusDots();
+                        }, 5000);
+                    }
+                    updateStatusDots();
+                });
+        }
+
+        function captureImage() {
+            fetch('/capture')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (data.category === 'accepted') {
+                            servoActive = true;
+                            setTimeout(() => {
+                                servoActive = false;
+                                updateStatusDots();
+                            }, 2000);
+                        }
+                        location.reload();
+                    }
+                    updateStatusDots();
+                });
+        }
+
+        // Initialize status dots
+        updateStatusDots();
+
+        // Check IR sensor every second
+        setInterval(checkIR, 1000);
+
+        // Monitor for joystick button press (using 'c' key for testing)
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'c') {
+                captureImage();
+            }
+        });
+    </script>
+</body>
+</html>
